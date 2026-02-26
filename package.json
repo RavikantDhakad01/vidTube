@@ -1,0 +1,28 @@
+{
+  "name": "vidtube",
+  "version": "1.0.0",
+  "description": "a project inspired by youtube",
+  "keywords": [
+    "backend",
+    "mongoose",
+    "express"
+  ],
+  "license": "ISC",
+  "author": "Ravikant Dhakad",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "mongoose": "^9.2.2"
+  },
+  "devDependencies": {
+    "dotenv": "^17.3.1",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.1"
+  }
+}
