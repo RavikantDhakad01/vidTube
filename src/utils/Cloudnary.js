@@ -21,13 +21,19 @@ const uploadOnCloudinary = async function (localFilePath) {
         return response
 
     } catch (error) {
-        fs.unlinkSync(localFilePath)
+
+        if (localFilePath && fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath)
+        }
         return null
     }
 }
 
 const deleteFromCloudinary = async function (publicId) {
     try {
+        if (!publicId) {
+            return null
+        }
         await cloudinary.uploader.destroy(publicId)
     } catch (error) {
         return null
