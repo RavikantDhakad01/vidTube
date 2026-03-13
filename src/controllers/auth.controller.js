@@ -2,12 +2,14 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { ApiError } from "../utils/ApiError.js"
 import User from "../models/video.models.js"
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/Cloudnary.js"
+
+
 const registerUser = async function (req, res, next) {
     try {
 
         const { username, email, password, fullName } = req.body
 
-        if ([username, email, password, fullName].some((field) => field.trim() === "")) {
+        if ([username, email, password, fullName].some((field) => field?.trim() === "")) {
             throw new ApiError(400, "All fields are required")
         }
 
@@ -18,9 +20,9 @@ const registerUser = async function (req, res, next) {
         if (existedUser) {
             throw new ApiError(409, "User with email or username already exists")
         }
-        const avtarLocalPath = req.files?.avatar[0]?.path
+        const avatarLocalPath = req.files?.avatar[0]?.path
 
-        if (!avtarLocalPath) {
+        if (!avatarLocalPath) {
             throw new ApiError(400, "Avatar file is required")
         }
 
@@ -30,7 +32,7 @@ const registerUser = async function (req, res, next) {
             coverImageLocalPath = req.files?.coverImage[0]?.path
         }
 
-        const avatar = await uploadOnCloudinary(avtarLocalPath)
+        const avatar = await uploadOnCloudinary(avatarLocalPath)
         const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
         if (!avatar) {
@@ -49,16 +51,17 @@ const registerUser = async function (req, res, next) {
             const createdUser = await User.findById(user._id).select("-password -refreshToken")
 
             if (!createdUser) {
-                500, "Something went wrong while registering the user"
+                throw new ApiError(500, "Something went wrong while registering the user")
             }
 
             return res.status(201).json(new ApiResponse(201, createdUser, "user registered successfully"))
 
         } catch (error) {
-            if (avatar) {
+
+            if (avatar?.public_id) {
                 await deleteFromCloudinary(avatar.public_id)
             }
-            if (coverImage) {
+            if (coverImage?.public_id) {
                 await deleteFromCloudinary(coverImage.public_id)
             }
             throw new ApiError(500, "user creation failed")
@@ -67,4 +70,8 @@ const registerUser = async function (req, res, next) {
     } catch (error) {
         next(error)
     }
+}
+
+export {
+    registerUser
 }
