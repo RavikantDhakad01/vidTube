@@ -1,6 +1,6 @@
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { ApiError } from "../utils/ApiError.js"
-import User from "../models/video.models.js"
+import User from "../models/user.models.js"
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/Cloudnary.js"
 
 
@@ -39,6 +39,7 @@ const registerUser = async function (req, res, next) {
             throw new ApiError(400, "Avatar file is required")
         }
         try {
+
             const user = await User.create({
                 fullName,
                 avatar: avatar.url,
@@ -57,6 +58,8 @@ const registerUser = async function (req, res, next) {
             return res.status(201).json(new ApiResponse(201, createdUser, "user registered successfully"))
 
         } catch (error) {
+            
+            console.log("user creation failed", error)
 
             if (avatar?.public_id) {
                 await deleteFromCloudinary(avatar.public_id)
