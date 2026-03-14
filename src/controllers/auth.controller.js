@@ -13,6 +13,7 @@ const generateAccessAndRefereshTokens = async (userId) => {
         if (!user) {
             throw new ApiError(404, "User does not exist")
         }
+
         const accessToken = await user.genrateAccessToken()
         const refreshToken = await user.genrateRefreshToken()
 
@@ -100,8 +101,11 @@ const registerUser = async (req, res, next) => {
 }
 
 const loginUser = async (req, res, next) => {
+
     try {
+
         const { email, password } = req.body
+
         if (!email || !password) {
             throw new ApiError(400, "Email or Password is required")
         }
@@ -126,7 +130,9 @@ const loginUser = async (req, res, next) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production"
         }
-        return res.status(200)
+
+        return res
+            .status(200)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
             .json(new ApiResponse(200, createdUser, "User logged in succesfully"))
@@ -137,14 +143,21 @@ const loginUser = async (req, res, next) => {
 }
 
 const refreshAccessToken = async (req, res, next) => {
+
     try {
+
         const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
         if (!incomingRefreshToken) {
-            throw new ApiError(400, "Refresh Token is required")
+            throw new ApiError(401, "Unauthorized access")
         }
 
-        const decoded = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+        let decoded;
+        try {
+            decoded = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+        } catch (error) {
+            throw new ApiError(401, "invaild RefreshToken")
+        }
 
         const user = await User.findById(decoded._id)
 
@@ -152,11 +165,12 @@ const refreshAccessToken = async (req, res, next) => {
             throw new ApiError(401, "invaild RefreshToken")
         }
 
-        if (incomingRefreshToken != user.refreshToken) {
+        if (incomingRefreshToken !== user.refreshToken) {
             throw new ApiError(401, "RefreshToken is invaild or expired")
         }
 
         const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
+
         const options = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production"
@@ -165,7 +179,7 @@ const refreshAccessToken = async (req, res, next) => {
             .status(200)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
-            .json(new ApiResponse(200, {}, "Tokens are refreshed"))
+            .json(new ApiResponse(200, { accessToken, refreshToken }, "Tokens are refreshed"))
 
     } catch (error) {
         next(error)
