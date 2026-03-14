@@ -4,31 +4,31 @@ import User from "../models/user.models.js"
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/Cloudnary.js"
 
 
-const generateAccessAndRefereshTokens = function (userId) {
-    return async function (req, res, next) {
-        try {
+const generateAccessAndRefereshTokens = async (userId) => {
 
-            const user = await User.findById(userId)
+    try {
 
-            if (!user) {
-                throw new ApiError(404, "User does not exist")
-            }
-            const AccessToken = await user.genrateAccessToken()
-            const RefreshToken = await user.genrateRefreshToken()
+        const user = await User.findById(userId)
 
-            user.refreshToken = RefreshToken
-
-            await user.save({ validateBeforeSave: false })
-
-            return { AccessToken, RefreshToken }
-
-        } catch (error) {
-            next(error)
+        if (!user) {
+            throw new ApiError(404, "User does not exist")
         }
+        const AccessToken = await user.genrateAccessToken()
+        const RefreshToken = await user.genrateRefreshToken()
+
+        user.refreshToken = RefreshToken
+
+        await user.save({ validateBeforeSave: false })
+
+        return { AccessToken, RefreshToken }
+
+    } catch (error) {
+        throw new ApiError(500, "something went wrong while genrating tokens")
     }
+
 }
 
-const registerUser = async function (req, res, next) {
+const registerUser = async (req, res, next) => {
     try {
 
         const { username, email, password, fullName } = req.body
@@ -98,6 +98,45 @@ const registerUser = async function (req, res, next) {
         next(error)
     }
 }
+
+const loginUser = async (req, res, next) => {
+    try {
+        const { username, email, password } = req.body
+        if (!email || !password) {
+            throw new ApiError(404, "Email or Password is missing")
+        }
+
+        const user = await User.findOne({
+            $and: [{ email }, { username }]
+        })
+
+        if (!user) {
+            throw new ApiError(404, "user not found")
+        }
+
+        if (!user.isPasswordCorrect(password)) {
+            throw new ApiError(400, "invaild credantials")
+        }
+
+        const { AccessToken, RefreshToken } = await generateAccessAndRefereshTokens(user._id)
+
+        const createdUser = await User.findById(user._id).select("-password -refreshToken")
+
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+        res.status(200)
+            .cookies("accessToken", AccessToken, options)
+            .cookies("refreshToken", RefreshToken, options)
+            .json(new ApiResponse(200, { createdUser, AccessToken, RefreshToken }, "User logged in succesfully"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+
 
 export {
     registerUser
