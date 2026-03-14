@@ -4,6 +4,30 @@ import User from "../models/user.models.js"
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/Cloudnary.js"
 
 
+const generateAccessAndRefereshTokens = function (userId) {
+    return async function (req, res, next) {
+        try {
+
+            const user = await User.findById(userId)
+
+            if (!user) {
+                throw new ApiError(404, "User does not exist")
+            }
+            const AccessToken = await user.genrateAccessToken()
+            const RefreshToken = await user.genrateRefreshToken()
+
+            user.refreshToken = RefreshToken
+
+            await user.save({ validateBeforeSave: false })
+
+            return { AccessToken, RefreshToken }
+
+        } catch (error) {
+            next(error)
+        }
+    }
+}
+
 const registerUser = async function (req, res, next) {
     try {
 
@@ -58,7 +82,7 @@ const registerUser = async function (req, res, next) {
             return res.status(201).json(new ApiResponse(201, createdUser, "user registered successfully"))
 
         } catch (error) {
-            
+
             console.log("user creation failed", error)
 
             if (avatar?.public_id) {
