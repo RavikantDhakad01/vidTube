@@ -2,7 +2,7 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { ApiError } from "../utils/ApiError.js"
 import User from "../models/user.models.js"
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/Cloudnary.js"
-
+import jwt from "jsonwebtoken"
 
 const generateAccessAndRefereshTokens = async (userId) => {
 
@@ -13,14 +13,14 @@ const generateAccessAndRefereshTokens = async (userId) => {
         if (!user) {
             throw new ApiError(404, "User does not exist")
         }
-        const AccessToken = await user.genrateAccessToken()
-        const RefreshToken = await user.genrateRefreshToken()
+        const accessToken = await user.genrateAccessToken()
+        const refreshToken = await user.genrateRefreshToken()
 
-        user.refreshToken = RefreshToken
+        user.refreshToken = refreshToken
 
         await user.save({ validateBeforeSave: false })
 
-        return { AccessToken, RefreshToken }
+        return { accessToken, refreshToken }
 
     } catch (error) {
         throw new ApiError(500, "something went wrong while genrating tokens")
@@ -115,10 +115,10 @@ const loginUser = async (req, res, next) => {
         }
 
         if (!await user.isPasswordCorrect(password)) {
-            throw new ApiError(400, "invaild credantials")
+            throw new ApiError(401, "invaild credantials")
         }
 
-        const { AccessToken, RefreshToken } = await generateAccessAndRefereshTokens(user._id)
+        const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
 
         const createdUser = await User.findById(user._id).select("-password -refreshToken")
 
@@ -126,19 +126,54 @@ const loginUser = async (req, res, next) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production"
         }
-        res.status(200)
-            .cookie("accessToken", AccessToken, options)
-            .cookie("refreshToken", RefreshToken, options)
-            .json(new ApiResponse(200, { createdUser, AccessToken, RefreshToken }, "User logged in succesfully"))
+        return res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(new ApiResponse(200, createdUser, "User logged in succesfully"))
 
     } catch (error) {
         next(error)
     }
 }
 
+const refreshAccessToken = async (req, res, next) => {
+    try {
+        const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
+        if (!incomingRefreshToken) {
+            throw new ApiError(400, "Refresh Token is required")
+        }
+
+        const decoded = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+
+        const user = await User.findById(decoded._id)
+
+        if (!user) {
+            throw new ApiError(401, "invaild RefreshToken")
+        }
+
+        if (incomingRefreshToken != user.refreshToken) {
+            throw new ApiError(401, "RefreshToken is invaild or expired")
+        }
+
+        const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
+        const options = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production"
+        }
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(new ApiResponse(200, {}, "Tokens are refreshed"))
+
+    } catch (error) {
+        next(error)
+    }
+}
 
 export {
     registerUser,
-    loginUser
+    loginUser,
+    refreshAccessToken
 }
