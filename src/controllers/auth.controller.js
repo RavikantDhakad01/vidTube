@@ -101,20 +101,20 @@ const registerUser = async (req, res, next) => {
 
 const loginUser = async (req, res, next) => {
     try {
-        const { username, email, password } = req.body
+        const { email, password } = req.body
         if (!email || !password) {
-            throw new ApiError(404, "Email or Password is missing")
+            throw new ApiError(400, "Email or Password is required")
         }
 
         const user = await User.findOne({
-            $and: [{ email }, { username }]
+            email
         })
 
         if (!user) {
             throw new ApiError(404, "user not found")
         }
 
-        if (!user.isPasswordCorrect(password)) {
+        if (!await user.isPasswordCorrect(password)) {
             throw new ApiError(400, "invaild credantials")
         }
 
@@ -124,11 +124,11 @@ const loginUser = async (req, res, next) => {
 
         const options = {
             httpOnly: true,
-            secure: true
+            secure: process.env.NODE_ENV === "production"
         }
         res.status(200)
-            .cookies("accessToken", AccessToken, options)
-            .cookies("refreshToken", RefreshToken, options)
+            .cookie("accessToken", AccessToken, options)
+            .cookie("refreshToken", RefreshToken, options)
             .json(new ApiResponse(200, { createdUser, AccessToken, RefreshToken }, "User logged in succesfully"))
 
     } catch (error) {
@@ -139,5 +139,6 @@ const loginUser = async (req, res, next) => {
 
 
 export {
-    registerUser
+    registerUser,
+    loginUser
 }
