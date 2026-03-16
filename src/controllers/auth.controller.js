@@ -186,8 +186,36 @@ const refreshAccessToken = async (req, res, next) => {
     }
 }
 
+const logoutUser = async (req, res, next) => {
+    try {
+
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $unset: {
+                    refreshToken: 1
+                }
+            },
+        )
+        const options = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production"
+        }
+
+        return res
+            .status(200)
+            .clearCookie("accessToken", options)
+            .clearCookie("refreshToken", options)
+            .json(new ApiResponse(200, {}, "user is logged out successfully"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
 export {
     registerUser,
     loginUser,
-    refreshAccessToken
+    refreshAccessToken,
+    logoutUser
 }
