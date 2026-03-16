@@ -213,9 +213,29 @@ const logoutUser = async (req, res, next) => {
     }
 }
 
+const getCurrentUser = async (req, res, next) => {
+    try {
+        return res
+            .status(200)
+            .json(new ApiResponse(200, req.user, "current user data fetched successfully"))
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+const changeCurrentPassword = async (req, res, next) => {
+    try {
+req.body
+    } catch (error) {
+        next(error)
+    }
+}
+
 export {
     registerUser,
     loginUser,
     refreshAccessToken,
-    logoutUser
+    logoutUser,
+    getCurrentUser
 }
