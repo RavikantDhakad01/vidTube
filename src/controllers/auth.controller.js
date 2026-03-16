@@ -242,12 +242,39 @@ const changeCurrentPassword = async (req, res, next) => {
 
         user.password = newPassword
 
-        await user.save({validateBeforeSave:false})
+        await user.save({ validateBeforeSave: false })
 
         return res
-        .status(200)
-        .json(new ApiResponse(200,{},"Password is change successfully"))
-        
+            .status(200)
+            .json(new ApiResponse(200, {}, "Password is change successfully"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+const updateAccountDetails = async (req, res, next) => {
+
+    try {
+        const { username, fullName } = req.body
+
+        const updateduser = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                username: username.toLowerCase(),
+                fullName
+            },
+            { new: true }
+        )
+
+        if (!updateduser) {
+            throw new ApiError(401, "Unauthorized access")
+        }
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, updateduser, "Account details are updated successfully"))
+
     } catch (error) {
         next(error)
     }
