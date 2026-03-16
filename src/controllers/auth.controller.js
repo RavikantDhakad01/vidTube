@@ -226,7 +226,28 @@ const getCurrentUser = async (req, res, next) => {
 
 const changeCurrentPassword = async (req, res, next) => {
     try {
-req.body
+        const { oldPassword, newPassword } = req.body
+
+        const user = await User.findById(req.user._id)
+
+        if (!user) {
+            throw new ApiError(401, "Unauthorized access")
+        }
+
+        const isPasswordvalid = await user.isPasswordCorrect(oldPassword)
+
+        if (!isPasswordvalid) {
+            throw new ApiError(401, "invaid credentials")
+        }
+
+        user.password = newPassword
+
+        await user.save({validateBeforeSave:false})
+
+        return res
+        .status(200)
+        .json(new ApiResponse(200,{},"Password is change successfully"))
+        
     } catch (error) {
         next(error)
     }
