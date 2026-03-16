@@ -228,6 +228,10 @@ const changeCurrentPassword = async (req, res, next) => {
     try {
         const { oldPassword, newPassword } = req.body
 
+        if (!oldPassword || !newPassword) {
+            throw new ApiError(401, "")
+        }
+
         const user = await User.findById(req.user._id)
 
         if (!user) {
@@ -257,15 +261,22 @@ const updateAccountDetails = async (req, res, next) => {
 
     try {
         const { username, fullName } = req.body
+        const updateFields = {}
+
+        if (username) {
+            updateFields.username = username.toLowerCase()
+        }
+        if (fullName) {
+            updateFields.fullName = fullName.trim()
+        }
 
         const updateduser = await User.findByIdAndUpdate(
             req.user._id,
             {
-                username: username.toLowerCase(),
-                fullName
+                $set: updateFields
             },
             { new: true }
-        )
+        ).select("-password -refreshToken")
 
         if (!updateduser) {
             throw new ApiError(401, "Unauthorized access")
@@ -280,10 +291,54 @@ const updateAccountDetails = async (req, res, next) => {
     }
 }
 
+const updateUserAvatar = async (req, res, next) => {
+    try {
+        const avatarLocalPath = req.file.path
+
+        if (!avatarLocalPath) {
+            throw new ApiError(401, "Avtar file is required")
+        }
+
+        const avatarUrl = req.user.avatar
+        const public_id = avatarUrl.split("/").pop().split(".")[0]
+
+        await deleteFromCloudinary(public_id)
+
+        const Avatar = await uploadOnCloudinary(avatarLocalPath)
+
+        if (!Avatar) {
+            throw new ApiError(401, "something went wrong while uploding the avatar")
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $set: {
+                    avatar: Avatar.url
+                }
+            },
+            { new: true }
+        ).select("-password -refreshToken")
+
+        if (!updatedUser) {
+            throw new ApiError(401, "Unauthorized access")
+        }
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, updatedUser, "Avatar is updated successfully"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
 export {
     registerUser,
     loginUser,
     refreshAccessToken,
     logoutUser,
-    getCurrentUser
+    getCurrentUser,
+    changeCurrentPassword,
+    updateAccountDetails
 }
