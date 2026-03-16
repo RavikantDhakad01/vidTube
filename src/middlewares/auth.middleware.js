@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken"
-import { ApiResponse } from "../utils/ApiResponse.js"
 import { ApiError } from "../utils/ApiError.js"
 import User from "../models/user.models.js"
 
@@ -26,6 +25,7 @@ const verifyJwt = async (req, res, next) => {
         }
 
         req.user = user
+        next()
 
     } catch (error) {
         next(error)
