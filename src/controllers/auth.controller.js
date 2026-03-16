@@ -333,6 +333,48 @@ const updateUserAvatar = async (req, res, next) => {
     }
 }
 
+const updateUserCoverImage = async (req, res, next) => {
+    try {
+
+        const coverImageLocalPath = req.file.path
+
+        if (!coverImageLocalPath) {
+            throw new ApiError(401, "Cover image is required")
+        }
+        const coverImageUrl = req.user.coverImage
+        const public_id = coverImageUrl.split("/").pop().split(".")[0]
+
+        await deleteFromCloudinary(public_id)
+
+        const CoverImage = await uploadOnCloudinary(coverImageLocalPath)
+
+        if (!CoverImage) {
+            throw new ApiError(401, "Something went wrong while uploading cover image")
+        }
+
+        const upadtedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $set: {
+                    coverImage: CoverImage.url
+                }
+            },
+            { new: true }
+        ).select("-password -refreshToken")
+
+        if (!upadtedUser) {
+            throw new ApiError(401, "Unauthorized access")
+        }
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, upadtedUser, "Cover image is changed succesfully"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
 export {
     registerUser,
     loginUser,
@@ -340,5 +382,6 @@ export {
     logoutUser,
     getCurrentUser,
     changeCurrentPassword,
-    updateAccountDetails
+    updateAccountDetails,
+    updateUserAvatar
 }
