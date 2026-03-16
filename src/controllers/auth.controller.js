@@ -187,8 +187,8 @@ const refreshAccessToken = async (req, res, next) => {
 }
 
 const logoutUser = async (req, res, next) => {
-    try {
 
+    try {
         const user = await User.findByIdAndUpdate(
             req.user._id,
             {
@@ -197,6 +197,7 @@ const logoutUser = async (req, res, next) => {
                 }
             },
         )
+
         const options = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production"
@@ -214,6 +215,7 @@ const logoutUser = async (req, res, next) => {
 }
 
 const getCurrentUser = async (req, res, next) => {
+
     try {
         return res
             .status(200)
@@ -225,6 +227,7 @@ const getCurrentUser = async (req, res, next) => {
 
 
 const changeCurrentPassword = async (req, res, next) => {
+
     try {
         const { oldPassword, newPassword } = req.body
 
@@ -266,6 +269,7 @@ const updateAccountDetails = async (req, res, next) => {
         if (username) {
             updateFields.username = username.toLowerCase()
         }
+
         if (fullName) {
             updateFields.fullName = fullName.trim()
         }
@@ -292,21 +296,22 @@ const updateAccountDetails = async (req, res, next) => {
 }
 
 const updateUserAvatar = async (req, res, next) => {
+
     try {
-        const avatarLocalPath = req.file.path
+        const avatarLocalPath = req.file?.path
 
         if (!avatarLocalPath) {
-            throw new ApiError(401, "Avtar file is required")
+            throw new ApiError(400, "Avtar file is required")
         }
 
         const avatarUrl = req.user.avatar
-        const public_id = avatarUrl.split("/").pop().split(".")[0]
+        const public_id = avatarUrl?.split("/").pop().split(".")[0]
 
         await deleteFromCloudinary(public_id)
 
-        const Avatar = await uploadOnCloudinary(avatarLocalPath)
+        const avatar = await uploadOnCloudinary(avatarLocalPath)
 
-        if (!Avatar) {
+        if (!avatar) {
             throw new ApiError(401, "something went wrong while uploding the avatar")
         }
 
@@ -314,7 +319,7 @@ const updateUserAvatar = async (req, res, next) => {
             req.user._id,
             {
                 $set: {
-                    avatar: Avatar.url
+                    avatar: avatar.url
                 }
             },
             { new: true }
@@ -334,21 +339,22 @@ const updateUserAvatar = async (req, res, next) => {
 }
 
 const updateUserCoverImage = async (req, res, next) => {
-    try {
 
-        const coverImageLocalPath = req.file.path
+    try {
+        const coverImageLocalPath = req.file?.path
 
         if (!coverImageLocalPath) {
             throw new ApiError(401, "Cover image is required")
         }
+
         const coverImageUrl = req.user.coverImage
-        const public_id = coverImageUrl.split("/").pop().split(".")[0]
+        const public_id = coverImageUrl?.split("/").pop().split(".")[0]
 
         await deleteFromCloudinary(public_id)
 
-        const CoverImage = await uploadOnCloudinary(coverImageLocalPath)
+        const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
-        if (!CoverImage) {
+        if (!coverImage) {
             throw new ApiError(401, "Something went wrong while uploading cover image")
         }
 
@@ -356,7 +362,7 @@ const updateUserCoverImage = async (req, res, next) => {
             req.user._id,
             {
                 $set: {
-                    coverImage: CoverImage.url
+                    coverImage: coverImage.url
                 }
             },
             { new: true }
@@ -383,5 +389,6 @@ export {
     getCurrentUser,
     changeCurrentPassword,
     updateAccountDetails,
-    updateUserAvatar
+    updateUserAvatar,
+    updateUserCoverImage
 }
