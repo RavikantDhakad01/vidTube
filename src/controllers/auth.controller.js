@@ -390,7 +390,7 @@ const getUserChannelProfile = async (req, res, next) => {
             throw new ApiError(400, "Username is missing")
         }
 
-        const channel = await User.aggreegate([
+        const channel = await User.aggregate([
             {
                 $match: {
                     username: username.trim()
@@ -446,6 +446,61 @@ const getUserChannelProfile = async (req, res, next) => {
     }
 }
 
+const getUserWatchHistory = async (req, res, next) => {
+
+    try {
+        const videos = await User.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(req.user?._id)
+                }
+            },
+            {
+                $lookup: {
+                    from: "videos",
+                    localField: "watchHistory",
+                    foreignField: "_id",
+                    as: videos,
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: "users",
+                                localField: "owner",
+                                foreignField: "_id",
+                                as: "owner",
+                                pipeline: [
+                                    {
+                                        $project: {
+                                            username: 1,
+                                            fullName: 1,
+                                            avatar: 1
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            $addFields: {
+                                owner: {
+                                    $first: "owner"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+
+        ])
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "User watchHistory fetched successfully"))
+    } catch (error) {
+        next(error)
+    }
+}
+
+
 export {
     registerUser,
     loginUser,
@@ -456,5 +511,6 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getUserWatchHistory
 }
