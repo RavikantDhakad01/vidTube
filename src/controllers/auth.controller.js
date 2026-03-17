@@ -393,7 +393,7 @@ const getUserChannelProfile = async (req, res, next) => {
         const channel = await User.aggregate([
             {
                 $match: {
-                    username: username.trim()
+                    username: username.trim().toLowerCase()
                 }
             },
             {
@@ -439,7 +439,7 @@ const getUserChannelProfile = async (req, res, next) => {
 
         return res
             .status(200)
-            .json(new ApiResponse(200, channel[0]), "Channel details fetched successfully")
+            .json(new ApiResponse(200, channel[0], "Channel details fetched successfully"))
 
     } catch (error) {
         next(error)
@@ -449,7 +449,7 @@ const getUserChannelProfile = async (req, res, next) => {
 const getUserWatchHistory = async (req, res, next) => {
 
     try {
-        const videos = await User.aggregate([
+        const user = await User.aggregate([
             {
                 $match: {
                     _id: new mongoose.Types.ObjectId(req.user?._id)
@@ -460,7 +460,7 @@ const getUserWatchHistory = async (req, res, next) => {
                     from: "videos",
                     localField: "watchHistory",
                     foreignField: "_id",
-                    as: videos,
+                    as: "videos",
                     pipeline: [
                         {
                             $lookup: {
@@ -494,7 +494,7 @@ const getUserWatchHistory = async (req, res, next) => {
 
         return res
             .status(200)
-            .json(new ApiResponse(200, {}, "User watchHistory fetched successfully"))
+            .json(new ApiResponse(200, user[0].videos, "User watchHistory fetched successfully"))
     } catch (error) {
         next(error)
     }

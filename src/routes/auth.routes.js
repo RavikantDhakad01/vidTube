@@ -30,16 +30,16 @@ router.route("/register").post(upload.fields([
 ]), registerUser)
 
 router.route("/login").post(loginUser)
-router.route("/refresh-tokens").post(refreshAccessToken)
+router.route("/refresh-token").post(refreshAccessToken)
+router.route("/channel/:username").get(getUserChannelProfile)
 
 //secure routes
 router.route("/logout").post(verifyJwt, logoutUser)
 router.route("/current-user").get(verifyJwt, getCurrentUser)
-router.route("/change-password").post(verifyJwt, changeCurrentPassword)
-router.route("/update-account").patch(verifyJwt, updateAccountDetails)
+router.route("/change-password").patch(verifyJwt, changeCurrentPassword)
+router.route("/update-profile").patch(verifyJwt, updateAccountDetails)
 router.route("/update-avatar").patch(verifyJwt, upload.single("avatar"), updateUserAvatar)
 router.route("/update-cover").patch(verifyJwt, upload.single("coverImage"), updateUserCoverImage)
-router.route("/channel/:username").get(verifyJwt, getUserChannelProfile)
 router.route("/history").get(verifyJwt, getUserWatchHistory)
 
 export default router
