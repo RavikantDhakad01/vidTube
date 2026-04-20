@@ -2,7 +2,6 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js"
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/Cloudnary.js"
 import Video from "../models/video.models.js"
-import mongoose from "mongoose"
 
 const publishVideo = async (req, res, next) => {
 
@@ -139,34 +138,57 @@ const getVideoById = async (req, res, next) => {
 
 const deleteVideo = async (req, res, next) => {
 
-   try {
-    
-     const { id } = req.params
-     const deletedVideo = await Video.findByIdAndDelete(id)
- 
-     if (!deletedVideo) {
-         throw new ApiError(404, "video not found")
-     }
- 
-     const videoUrl = deletedVideo.videoFile
-     const thumbnailUrl = deletedVideo.thumbnail
- 
-     const videoPublic_id = videoUrl?.split("/")?.pop()?.split(".")[0]
-     const thumbnailPublic_id =thumbnailUrl?.split("/")?.pop()?.split(".")[0]
- 
-     await deleteFromCloudinary(videoPublic_id)
-     await deleteFromCloudinary(thumbnailPublic_id)
- 
-     return res.status(200).json(new ApiResponse(200,deletedVideo),"Video deleted successfully")
+    try {
 
-   } catch (error) {
-    next(error)
-   }
+        const { id } = req.params
+        const deletedVideo = await Video.findByIdAndDelete(id)
+
+        if (!deletedVideo) {
+            throw new ApiError(404, "video not found")
+        }
+
+        const videoUrl = deletedVideo.videoFile
+        const thumbnailUrl = deletedVideo.thumbnail
+
+        const videoPublic_id = videoUrl?.split("/")?.pop()?.split(".")[0]
+        const thumbnailPublic_id = thumbnailUrl?.split("/")?.pop()?.split(".")[0]
+
+        await deleteFromCloudinary(videoPublic_id)
+        await deleteFromCloudinary(thumbnailPublic_id)
+
+        return res.status(200).json(new ApiResponse(200, deletedVideo, "Video deleted successfully"))
+
+    } catch (error) {
+        next(error)
+    }
 }
+
+const togglePublishStatus = async (req, res, next) => {
+
+    try {
+        const { id } = req.params
+        const video = await Video.findById(id)
+    
+        if (!video) {
+            throw new ApiError(404, "Video not found")
+        }
+    
+        video.isPublished = !video.isPublished
+        await Video.save({ validateBeforeSave: false })
+    
+        return res.status(200).json(new ApiResponse(200, video, "Publish status changed successfully"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+
 
 export {
     publishVideo,
     getAllVideos,
     getVideoById,
-    deleteVideo
+    deleteVideo,
+    togglePublishStatus
 }
