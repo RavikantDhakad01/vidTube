@@ -168,14 +168,14 @@ const togglePublishStatus = async (req, res, next) => {
     try {
         const { id } = req.params
         const video = await Video.findById(id)
-    
+
         if (!video) {
             throw new ApiError(404, "Video not found")
         }
-    
+
         video.isPublished = !video.isPublished
         await Video.save({ validateBeforeSave: false })
-    
+
         return res.status(200).json(new ApiResponse(200, video, "Publish status changed successfully"))
 
     } catch (error) {
@@ -183,6 +183,46 @@ const togglePublishStatus = async (req, res, next) => {
     }
 }
 
+const updateVideo = async (req, res, next) => {
+
+    try {
+
+        const { id } = req.params
+        const { title, description } = req.body
+        const thumbnail = req.file
+
+        const video = await Video.findById(id)
+
+        if(!video){
+             throw new ApiError(404, "Video not found")
+        }
+        const oldThumbnailUrl = video.thumbnail
+        const public_id = oldThumbnailUrl?.split("/")?.pop()?.split(".")[0]
+        await deleteFromCloudinary(public_id)
+
+        const newThumbnailFile = await uploadOnCloudinary(thumbnail?.path)
+        const newThumbnailUrl = newThumbnailFile.url
+
+        if (title) {
+            video.title = title
+        }
+
+        if (description) {
+            video.description = description
+        }
+
+        if (newThumbnailUrl) {
+            video.thumbnail = newThumbnailUrl
+        }
+        
+     await video.save({ validateBeforeSave: false })
+
+     return res.status(200).json(new ApiResponse(200,video,"Video details are changed successfully"))
+
+    } catch (error) {
+        next(error)
+    }
+}
 
 
 export {
