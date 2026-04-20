@@ -127,7 +127,7 @@ const getVideoById = async (req, res, next) => {
         )
 
         if (!video) {
-            throw new ApiError(401, "video is not available")
+            throw new ApiError(404, "video not found")
         }
 
         return res.status(200).json(new ApiResponse(200, video, "Video fetched succeffully"))
@@ -145,14 +145,14 @@ const deleteVideo = async (req, res, next) => {
      const deletedVideo = await Video.findByIdAndDelete(id)
  
      if (!deletedVideo) {
-         throw new ApiError(401, "video is not available")
+         throw new ApiError(404, "video not found")
      }
  
      const videoUrl = deletedVideo.videoFile
      const thumbnailUrl = deletedVideo.thumbnail
  
-     const videoPublic_id = videoUrl?.split("/").pop().split(".")[0]
-     const thumbnailPublic_id =thumbnailUrl?.split("/").pop().split(".")[0]
+     const videoPublic_id = videoUrl?.split("/")?.pop()?.split(".")[0]
+     const thumbnailPublic_id =thumbnailUrl?.split("/")?.pop()?.split(".")[0]
  
      await deleteFromCloudinary(videoPublic_id)
      await deleteFromCloudinary(thumbnailPublic_id)
