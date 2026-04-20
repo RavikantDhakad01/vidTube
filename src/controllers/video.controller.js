@@ -116,7 +116,57 @@ const getAllVideos = async (req, res, next) => {
     }
 }
 
+const getVideoById = async (req, res, next) => {
+
+    try {
+
+        const { id } = req.params
+        const video = await Video.findByIdAndUpdate(id,
+            { $inc: { views: 1 } },
+            { new: true }
+        )
+
+        if (!video) {
+            throw new ApiError(401, "video is not available")
+        }
+
+        return res.status(200).json(new ApiResponse(200, video, "Video fetched succeffully"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+const deleteVideo = async (req, res, next) => {
+
+   try {
+    
+     const { id } = req.params
+     const deletedVideo = await Video.findByIdAndDelete(id)
+ 
+     if (!deletedVideo) {
+         throw new ApiError(401, "video is not available")
+     }
+ 
+     const videoUrl = deletedVideo.videoFile
+     const thumbnailUrl = deletedVideo.thumbnail
+ 
+     const videoPublic_id = videoUrl?.split("/").pop().split(".")[0]
+     const thumbnailPublic_id =thumbnailUrl?.split("/").pop().split(".")[0]
+ 
+     await deleteFromCloudinary(videoPublic_id)
+     await deleteFromCloudinary(thumbnailPublic_id)
+ 
+     return res.status(200).json(new ApiResponse(200,deletedVideo),"Video deleted successfully")
+
+   } catch (error) {
+    next(error)
+   }
+}
+
 export {
     publishVideo,
-    getAllVideos
+    getAllVideos,
+    getVideoById,
+    deleteVideo
 }
