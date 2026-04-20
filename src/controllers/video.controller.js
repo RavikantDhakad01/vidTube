@@ -74,6 +74,49 @@ const publishVideo = async (req, res, next) => {
     }
 }
 
+const getAllVideos = async (req, res, next) => {
+    try {
+
+        let {
+            page = 1,
+            limit = 10,
+            query,
+            sortBy = "createdAt",
+            sortType = "desc",
+            userId
+        } = req.query
+
+        page = Number(page)
+        limit = Number(limit)
+
+        const skip = (page - 1) * limit
+
+        const filter = {}
+
+        if (query) {
+            filter.$or = [
+                { title: { $regex: query, $options: "i" } },
+                { description: { $regex: query, $options: "i" } }
+            ]
+        }
+        if (userId) {
+            filter.owner = userId
+        }
+        const sort = {}
+
+        sort[sortBy] = sortType === "asc" ? 1 : -1
+
+        const videos = await Video.find(filter).sort(sort).skip(skip).limit(limit)
+        const totalVideos = await Video.countDocuments(filter)
+
+        return res.status(200).json(new ApiResponse(200, { videos, totalVideos }, "videos fetched successfully"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
 export {
-    publishVideo
+    publishVideo,
+    getAllVideos
 }
