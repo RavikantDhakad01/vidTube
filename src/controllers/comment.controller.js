@@ -45,21 +45,28 @@ const getVideoComments = async (req, res, next) => {
 const updateComment = async (req, res, next) => {
     try {
         const { content } = req.body
+
+        if (!content || content.trim() === "") {
+            throw new ApiError(400, "Content is required")
+        }
+
         const { id } = req.params
 
-        const updatedComment = await Comment.findByIdAndUpdate(id,
-            {
-                content: content
-            },
-            {
-                new: true
-            })
+        const comment = await Comment.findById(id)
 
-        if (!updatedComment) {
+        if (!comment) {
             throw new ApiError(404, "Comment not found")
         }
 
-        return res.status(200).json(new ApiResponse(200, updatedComment, "Comment content updated successfully"))
+        if (comment.owner.toString() !== req.user?._id.toString()) {
+            throw new ApiError(403, "Unauthrized access")
+        }
+
+        comment.content = content.trim()
+        await comment.save({ validateBeforeSave: false })
+
+
+        return res.status(200).json(new ApiResponse(200, comment, "Comment content updated successfully"))
 
     } catch (error) {
         next(error)
@@ -70,12 +77,19 @@ const deleteComment = async (req, res, next) => {
     try {
         const { id } = req.params
 
-        const deletedComment = await Comment.findByIdAndDelete(id)
+        const comment = await Comment.findById(id)
 
-        if (!deletedComment) {
+        if (!comment) {
             throw new ApiError(404, "Comment not found")
         }
-        return res.status(200).json(new ApiResponse(200,deleteComment,"Comment deleted successfully"))
+
+        if (comment.owner.toString() !== req.user?._id.toString()) {
+            throw new ApiError(403, "Unauthrized access")
+        }
+
+        const deletedComment = await Comment.findByIdAndDelete(id)
+
+        return res.status(200).json(new ApiResponse(200, deletedComment, "Comment deleted successfully"))
 
     } catch (error) {
         next(error)
