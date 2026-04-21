@@ -37,6 +37,22 @@ const addComment = async (req, res, next) => {
 const getVideoComments = async (req, res, next) => {
     try {
 
+        const { videoId } = req.params
+        const { page = 1, limit = 10 } = req.query
+
+        page = Number(page)
+        limit = Number(limit)
+
+        const skip = (page - 1) * limit
+
+        const comments = await Comment.find({ video: videoId }).sort({ createdAt: -1 }).skip(skip).limit(limit)
+
+        if (!comments) {
+            throw new ApiError(404, "Comments not found")
+        }
+
+        return res.status(200).json(new ApiResponse(200, comments, "Comments are fetched successfully"))
+
     } catch (error) {
         next(error)
     }
