@@ -16,8 +16,10 @@ app.use(cookieParser())
 
 import healthcheckRouter from "./routes/healthcheck.routes.js"
 import authRouter from "./routes/auth.routes.js"
+import videoRouter from "./routes/video.routes.js"
 
 app.use("/api/v1/healthcheck", healthcheckRouter)
 app.use("/api/v1/user", authRouter)
+app.use("/api/v1/video",videoRouter)
 
 export default app
