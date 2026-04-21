@@ -10,8 +10,7 @@ import { verifyJwt } from "../middlewares/auth.middleware.js"
 
 const router = Router()
 
-router.route("/").get(verifyJwt,getVideoComments)
-router.route("/").post(verifyJwt,addComment)
+router.route("/:videoId").get(verifyJwt,getVideoComments).post(verifyJwt,addComment)
 router.route("/:id").patch(verifyJwt,updateComment)
 router.route("/:id").delete(verifyJwt,deleteComment)
 
