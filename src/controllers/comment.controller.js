@@ -13,14 +13,14 @@ const addComment = async (req, res, next) => {
         if (!video) {
             throw new ApiError(404, "Video not found")
         }
-        if (!content || content.trim()==="") {
+        if (!content || content.trim() === "") {
             throw new ApiError(400, "Content is required")
         }
 
         const comment = await Comment.create({
             content: content,
             video: videoId,
-            owner:req.user?._id
+            owner: req.user?._id
         })
 
         if (!comment) {
@@ -44,6 +44,22 @@ const getVideoComments = async (req, res, next) => {
 
 const updateComment = async (req, res, next) => {
     try {
+        const { content } = req.body
+        const { id } = req.patarams
+
+        const comment = await Comment.findByIdAndUpdate(id,
+            {
+                content: content
+            },
+            {
+                new: true
+            })
+
+        if (!comment) {
+            throw new ApiError(404, "Comment not found")
+        }
+
+        return res.status(200).json(new ApiResponse(200, comment, "Comment content updated successfully"))
 
     } catch (error) {
         next(error)
