@@ -1,6 +1,5 @@
 import Comment from "../models/comment.models.js"
 import Video from "../models/video.models.js"
-import mongoose from "mongoose"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { ApiError } from "../utils/ApiError.js"
 
@@ -14,14 +13,14 @@ const addComment = async (req, res, next) => {
         if (!video) {
             throw new ApiError(404, "Video not found")
         }
-        if (!content) {
-            throw new ApiError(401, "Content is required")
+        if (!content || content.trim()==="") {
+            throw new ApiError(400, "Content is required")
         }
 
         const comment = await Comment.create({
             content: content,
-            video: new mongoose.Types.ObjectId(videoId),
-            owner: new mongoose.Types.ObjectId(req.user?._id)
+            video: videoId,
+            owner:req.user?._id
         })
 
         if (!comment) {
