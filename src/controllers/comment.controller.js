@@ -45,9 +45,9 @@ const getVideoComments = async (req, res, next) => {
 const updateComment = async (req, res, next) => {
     try {
         const { content } = req.body
-        const { id } = req.patarams
+        const { id } = req.params
 
-        const comment = await Comment.findByIdAndUpdate(id,
+        const updatedComment = await Comment.findByIdAndUpdate(id,
             {
                 content: content
             },
@@ -55,11 +55,11 @@ const updateComment = async (req, res, next) => {
                 new: true
             })
 
-        if (!comment) {
+        if (!updatedComment) {
             throw new ApiError(404, "Comment not found")
         }
 
-        return res.status(200).json(new ApiResponse(200, comment, "Comment content updated successfully"))
+        return res.status(200).json(new ApiResponse(200, updatedComment, "Comment content updated successfully"))
 
     } catch (error) {
         next(error)
@@ -68,6 +68,14 @@ const updateComment = async (req, res, next) => {
 
 const deleteComment = async (req, res, next) => {
     try {
+        const { id } = req.params
+
+        const deletedComment = await Comment.findByIdAndDelete(id)
+
+        if (!deletedComment) {
+            throw new ApiError(404, "Comment not found")
+        }
+        return res.status(200).json(new ApiResponse(200,deleteComment,"Comment deleted successfully"))
 
     } catch (error) {
         next(error)
