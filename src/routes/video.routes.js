@@ -25,10 +25,11 @@ router.route("/").post(verifyJwt, upload.fields([
     }
 ]), publishVideo)
 
-router.route("/").get(verifyJwt, getAllVideos)
+router.route("/").get(getAllVideos)
+
 router.route("/:id").get(verifyJwt, getVideoById)
 router.route("/:id").delete(verifyJwt, deleteVideo)
-router.route("/:id").patch(verifyJwt, togglePublishStatus)
+router.route("/:id/toggle").patch(verifyJwt, togglePublishStatus)
 router.route("/:id").patch(verifyJwt, upload.single("thumbnail"), updateVideo)
 
 export default router
