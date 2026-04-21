@@ -199,8 +199,12 @@ const updateVideo = async (req, res, next) => {
 
         if (thumbnail) {
             const oldThumbnailUrl = video.thumbnail
-            const public_id = oldThumbnailUrl?.split("/")?.pop()?.split(".")[0]
-            await deleteFromCloudinary(public_id)
+
+            if (oldThumbnailUrl) {
+                const public_id = oldThumbnailUrl?.split("/")?.pop()?.split(".")[0]
+                await deleteFromCloudinary(public_id)
+            }
+
 
             const newThumbnailFile = await uploadOnCloudinary(thumbnail?.path)
 
@@ -220,6 +224,10 @@ const updateVideo = async (req, res, next) => {
             video.description = description
         }
 
+        if (!title && !description && !thumbnail) {
+            throw new ApiError(400, "No data provided to update")
+        }
+
         await video.save({ validateBeforeSave: false })
 
         return res.status(200).json(new ApiResponse(200, video, "Video details are changed successfully"))
@@ -235,5 +243,6 @@ export {
     getAllVideos,
     getVideoById,
     deleteVideo,
-    togglePublishStatus
+    togglePublishStatus,
+    updateVideo
 }
