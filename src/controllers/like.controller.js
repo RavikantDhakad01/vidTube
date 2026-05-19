@@ -46,9 +46,20 @@ const toggleCommentLike = async (req, res, next) => {
 }
 
 
-const getLikedVideos = asyncHandler(async (req, res) => {
-    //TODO: get all liked videos
-})
+const getLikedVideos = async (req, res, next) => {
+
+    try {
+        const likedVideos = await Like.find({
+            likedBy: req.user._id,
+            video: { $exists: true }
+        }).populate("video")
+
+        return res.status(200).json(new ApiResponse(200, likedVideos, "Liked videos fetched successfully"))
+
+    } catch (error) {
+        next(error)
+    }
+}
 
 export {
     toggleCommentLike,
