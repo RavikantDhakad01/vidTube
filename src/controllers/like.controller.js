@@ -1,0 +1,57 @@
+import Like from "../models/like.models.js"
+import ApiError from "../utils/ApiError.js"
+import ApiResponse from "../utils/ApiResponse.js"
+
+const toggleVideoLike = async (req, res, next) => {
+
+    try {
+        const { videoId } = req.params
+        const like = await Like.findOne({ video: videoId, likedBy: req.user._id })
+
+        if (!like) {
+            const newLike = await Like.create({
+                video: videoId, likedBy: req.user._id
+            })
+
+            return res.status(200).json(new ApiResponse(200, newLike, "Video liked"))
+        }
+
+        const unLike = await Like.findByIdAndDelete(like._id)
+        return res.status(200).json(new ApiResponse(200, unLike, "Video unLiked"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+const toggleCommentLike = async (req, res, next) => {
+
+    try {
+        const { commentId } = req.params
+        const like = await Like.findOne({ comment: commentId, likedBy: req.user._id })
+
+        if (!like) {
+            const newLike = await Like.create({
+                comment: commentId, likedBy: req.user._id
+            })
+            return res.status(200).json(new ApiResponse(200, newLike, "Comment liked"))
+        }
+
+        const unLike = await Like.findByIdAndDelete(like._id)
+        return res.status(200).json(new ApiResponse(200, unLike, "Comment unLiked"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+const getLikedVideos = asyncHandler(async (req, res) => {
+    //TODO: get all liked videos
+})
+
+export {
+    toggleCommentLike,
+    toggleVideoLike,
+    getLikedVideos
+}

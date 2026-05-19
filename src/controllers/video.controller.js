@@ -116,7 +116,6 @@ const getAllVideos = async (req, res, next) => {
 }
 
 const getVideoById = async (req, res, next) => {
-
     try {
 
         const { id } = req.params
