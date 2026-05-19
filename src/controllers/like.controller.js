@@ -4,8 +4,8 @@ import ApiResponse from "../utils/ApiResponse.js"
 
 const toggleVideoLike = async (req, res, next) => {
 
-    try {
-        const { videoId } = req.params
+     const { videoId } = req.params
+    try {       
         const like = await Like.findOne({ video: videoId, likedBy: req.user._id })
 
         if (!like) {
@@ -17,7 +17,7 @@ const toggleVideoLike = async (req, res, next) => {
         }
 
         const unLike = await Like.findByIdAndDelete(like._id)
-        return res.status(200).json(new ApiResponse(200, unLike, "Video unLiked"))
+        return res.status(200).json(new ApiResponse(200, unLike, "Video unliked"))
 
     } catch (error) {
         next(error)
@@ -26,8 +26,8 @@ const toggleVideoLike = async (req, res, next) => {
 
 const toggleCommentLike = async (req, res, next) => {
 
+ const { commentId } = req.params
     try {
-        const { commentId } = req.params
         const like = await Like.findOne({ comment: commentId, likedBy: req.user._id })
 
         if (!like) {
@@ -38,7 +38,28 @@ const toggleCommentLike = async (req, res, next) => {
         }
 
         const unLike = await Like.findByIdAndDelete(like._id)
-        return res.status(200).json(new ApiResponse(200, unLike, "Comment unLiked"))
+        return res.status(200).json(new ApiResponse(200, unLike, "Comment unliked"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+const toggleTweetLike = async (req, res, next) => {
+
+    const { tweetId } = req.params
+    try {
+        const like = await Like.findOne({ tweet: tweetId, likedBy: req.user._id })
+
+        if (!like) {
+            const newLike = await Like.create({
+                tweet: tweetId, likedBy: req.user._id
+            })
+            return res.status(200).json(new ApiResponse(200, newLike, "Tweet liked"))
+        }
+
+        const unLike = await Like.findByIdAndDelete(like._id)
+        return res.status(200).json(new ApiResponse(200, unLike, "Tweet unliked"))
 
     } catch (error) {
         next(error)
