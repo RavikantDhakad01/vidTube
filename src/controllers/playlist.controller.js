@@ -5,7 +5,8 @@ import ApiError from "../utils/ApiError.js"
 const createPlaylist = async (req, res, next) => {
     const { name, description } = req.body
 
-    if (
+    try {
+ if (
         !name ||
         !description ||
         name.trim() === "" ||
@@ -13,8 +14,6 @@ const createPlaylist = async (req, res, next) => {
     ) {
         throw new ApiError(400, "Fields are missing")
     }
-    try {
-
         const playlist = await Playlist.create({
             name: name.trim(),
             description: description.trim(),
@@ -58,15 +57,60 @@ const getPlaylistById = async (req, res, next) => {
     }
 }
 
-const addVideoToPlaylist = asyncHandler(async (req, res) => {
+const addVideoToPlaylist = async (req, res, next) => {
     const { playlistId, videoId } = req.params
-})
 
-const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
+    try {
+        const playlist = await Playlist.findById(playlistId)
+        if (!playlist) {
+            throw new ApiError(404, "Playlist does not exist")
+        }
+
+        if (playlist.owner.toString() !== req.user._id.toString()) {
+            throw new ApiError(403, "unauthorized access")
+        }
+
+        if (playlist.videos.some((video) => video.toString() === videoId)) {
+            throw new ApiError(400, "Video already exist in playlist")
+        }
+
+        playlist.videos.push(videoId)
+        await playlist.save()
+
+        return res.status(200).json(new ApiResponse(200, playlist, "Video added to playlist"))
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+const removeVideoFromPlaylist = async (req, res, next) => {
     const { playlistId, videoId } = req.params
-    // TODO: remove video from playlist
 
-})
+    try {
+        const playlist = await Playlist.findById(playlistId)
+        if (!playlist) {
+            throw new ApiError(404, "Playlist does not exist")
+        }
+
+        if (playlist.owner.toString() !== req.user._id.toString()) {
+            throw new ApiError(403, "unauthorized access")
+        }
+
+        if (!playlist.videos.some((video) => video.toString() === videoId)) {
+            throw new ApiError(404, "Video does not exist in playlist")
+        }
+
+        const remove = playlist.videos.filter((video) => video.toString() !== videoId)
+        playlist.videos = remove
+        await playlist.save()
+
+        return res.status(200).json(new ApiResponse(200, playlist, "Video removed from playlist"))
+
+    } catch (error) {
+        next(error)
+    }
+}
 
 const deletePlaylist = async (req, res, next) => {
     const { playlistId } = req.params
@@ -77,7 +121,7 @@ const deletePlaylist = async (req, res, next) => {
             throw new ApiError(404, "Playlist not found")
         }
         if (playlist.owner.toString() !== req.user._id.toString()) {
-            throw new ApiError(403, "Unauthrized access")
+            throw new ApiError(403, "unauthorized access")
         }
 
         const deletedPlaylist = await Playlist.findByIdAndDelete(playlist._id)
@@ -88,11 +132,40 @@ const deletePlaylist = async (req, res, next) => {
     }
 }
 
-const updatePlaylist = asyncHandler(async (req, res) => {
+const updatePlaylist = async (req, res, next) => {
     const { playlistId } = req.params
     const { name, description } = req.body
-    //TODO: update playlist
-})
+
+    try {
+        if (
+            !name ||
+            !description ||
+            name.trim() === "" ||
+            description.trim() === ""
+        ) {
+            throw new ApiError(400, "Fields are missing")
+        }
+        
+        const playlist = await Playlist.findById(playlistId)
+
+        if (!playlist) {
+            throw new ApiError(404, "Playlist does not exist")
+        }
+
+        if (playlist.owner.toString() !== req.user._id.toString()) {
+            throw new ApiError(403, "unauthorized access")
+        }
+
+        playlist.name = name.trim()
+        playlist.description = description.trim()
+        await playlist.save()
+        
+        return res.status(200).json(new ApiResponse(200, playlist, "Playlist updated successfully"))
+
+    } catch (error) {
+        next(error)
+    }
+}
 
 export {
     createPlaylist,
