@@ -7,16 +7,16 @@ const toggleSubscription = async (req, res, next) => {
   const { channelId } = req.params
   try {
 
-    if(req.user._id.toString()===channelId){
-      throw new ApiError(400,"User cannot subscribe to own channel")
+    if (req.user._id.toString() === channelId) {
+      throw new ApiError(400, "User cannot subscribe to own channel")
     }
     const subscribe = await Subscription.findOne({
       subscriber: req.user._id,
       channel: channelId
     })
-  
+
     if (!subscribe) {
-    const  newSubscribe = await Subscription.create({
+      const newSubscribe = await Subscription.create({
         subscriber: req.user._id,
         channel: channelId
       })
@@ -32,11 +32,16 @@ const toggleSubscription = async (req, res, next) => {
   }
 }
 
-// controller to return subscriber list of a channel
+
 const getUserChannelSubscribers = async (req, res, next) => {
   const { channelId } = req.params
-  try {
 
+  try {
+    const subscribers = await Subscription.find({
+      channel: channelId
+    }).populate("subscriber","username avatar")
+
+    return res.status(200).json(new ApiResponse(200, subscribers, "Channel subscribers fetched successfully"))
   } catch (error) {
     next(error)
   }
