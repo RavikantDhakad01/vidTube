@@ -18,6 +18,17 @@ const createTweet = async (req, res, next) => {
       next(error)
    }
 }
+const getUserTweets = async (req, res,next) => {
+   const { userId } = req.params
+   try {
+      const userTweets = await Tweet.find({
+         owner: userId
+      }).sort({createdAt:-1})
+      return res.status(200).json(new ApiResponse(200, userTweets, "user tweets fetched successfully"))
+   } catch (error) {
+      next(error)
+   }
+}
 
 
 const updateTweet = async (req, res) => {
