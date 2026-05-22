@@ -75,7 +75,7 @@ const addVideoToPlaylist = async (req, res, next) => {
         }
 
         playlist.videos.push(videoId)
-        await playlist.save()
+        await playlist.save({ validateBeforeSave: false })
 
         return res.status(200).json(new ApiResponse(200, playlist, "Video added to playlist"))
 
@@ -103,7 +103,7 @@ const removeVideoFromPlaylist = async (req, res, next) => {
 
         const remove = playlist.videos.filter((video) => video.toString() !== videoId)
         playlist.videos = remove
-        await playlist.save()
+        await playlist.save({ validateBeforeSave: false })
 
         return res.status(200).json(new ApiResponse(200, playlist, "Video removed from playlist"))
 
@@ -158,7 +158,7 @@ const updatePlaylist = async (req, res, next) => {
 
         playlist.name = name.trim()
         playlist.description = description.trim()
-        await playlist.save()
+        await playlist.save({ validateBeforeSave: false })
         
         return res.status(200).json(new ApiResponse(200, playlist, "Playlist updated successfully"))
 
