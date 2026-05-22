@@ -51,7 +51,11 @@ const getUserChannelSubscribers = async (req, res, next) => {
 const getSubscribedChannels = async (req, res, next) => {
   const { subscriberId } = req.params
   try {
+  const subscription = await Subscription.find({
+      subscriber: subscriberId
+    }).populate("channel","username avatar")
 
+     return res.status(200).json(new ApiResponse(200,subscription, "User subscription fetched successfully"))
   } catch (error) {
     next(error)
   }
