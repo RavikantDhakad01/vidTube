@@ -57,8 +57,19 @@ const updateTweet = async (req, res, next) => {
 }
 
 const deleteTweet = async (req, res, next) => {
+   const { tweetId } = req.params
    try {
+      const tweet = await Tweet.findById(tweetId)
+      if (!tweet) {
+         throw new ApiError(404, "Tweet does not exist")
+      }
 
+      if (tweet.owner.toString() !== req.user._id.toString()) {
+         throw new ApiError(403, "Unauthorized access")
+      }
+
+   const deletedTweet =  await Tweet.findByIdAndDelete(tweet._id)
+      return res.status(200).json(new ApiResponse(200,deletedTweet, "Tweet deleted successfully"))
    } catch (error) {
       next(error)
    }
