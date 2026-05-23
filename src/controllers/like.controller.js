@@ -85,5 +85,6 @@ const getLikedVideos = async (req, res, next) => {
 export {
     toggleCommentLike,
     toggleVideoLike,
+    toggleTweetLike,
     getLikedVideos
 }
