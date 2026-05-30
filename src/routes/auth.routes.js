@@ -15,6 +15,7 @@ import {
 
 import upload from "../middlewares/multer.middleware.js"
 import { verifyJwt } from "../middlewares/auth.middleware.js"
+import  {validateImage,validateVideo,validateImageFiles} from "../middlewares/fileType.middleware.js"
 
 const router = Router()
 
@@ -27,7 +28,7 @@ router.route("/register").post(upload.fields([
         name: "coverImage",
         maxCount: 1
     }
-]), registerUser)
+]),validateImageFiles, registerUser)
 
 router.route("/login").post(loginUser)
 router.route("/refresh-token").post(refreshAccessToken)
@@ -38,8 +39,8 @@ router.route("/logout").post(verifyJwt, logoutUser)
 router.route("/current-user").get(verifyJwt, getCurrentUser)
 router.route("/change-password").patch(verifyJwt, changeCurrentPassword)
 router.route("/update-profile").patch(verifyJwt, updateAccountDetails)
-router.route("/update-avatar").patch(verifyJwt, upload.single("avatar"), updateUserAvatar)
-router.route("/update-cover").patch(verifyJwt, upload.single("coverImage"), updateUserCoverImage)
+router.route("/update-avatar").patch(verifyJwt, upload.single("avatar"),validateImage, updateUserAvatar)
+router.route("/update-cover").patch(verifyJwt, upload.single("coverImage"),validateImage, updateUserCoverImage)
 router.route("/history").get(verifyJwt, getUserWatchHistory)
 
 export default router

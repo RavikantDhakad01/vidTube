@@ -3,8 +3,9 @@ import { ApiError } from "../utils/ApiError.js"
 import User from "../models/user.models.js"
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/Cloudnary.js"
 import jwt from "jsonwebtoken"
+import mongoose from "mongoose"
 
-const generateAccessAndRefereshTokens = async (userId) => {
+const generateAccessAndRefreshTokens = async (userId) => {
 
     try {
 
@@ -24,6 +25,7 @@ const generateAccessAndRefereshTokens = async (userId) => {
         return { accessToken, refreshToken }
 
     } catch (error) {
+        console.log(error)
         throw new ApiError(500, "something went wrong while genrating tokens")
     }
 
@@ -34,7 +36,7 @@ const registerUser = async (req, res, next) => {
 
         const { username, email, password, fullName } = req.body
 
-        if ([username, email, password, fullName].some((field) => field?.trim() === "")) {
+        if ([username, email, password, fullName].some((field) => !field || field.trim() === "")) {
             throw new ApiError(400, "All fields are required")
         }
 
@@ -106,7 +108,7 @@ const loginUser = async (req, res, next) => {
 
         const { email, password } = req.body
 
-        if (!email || !password) {
+        if (!email?.trim() || !password?.trim()) {
             throw new ApiError(400, "Email or Password is required")
         }
 
@@ -122,7 +124,7 @@ const loginUser = async (req, res, next) => {
             throw new ApiError(401, "invaild credantials")
         }
 
-        const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
 
         const createdUser = await User.findById(user._id).select("-password -refreshToken")
 
@@ -146,7 +148,7 @@ const refreshAccessToken = async (req, res, next) => {
 
     try {
 
-        const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+        const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken
 
         if (!incomingRefreshToken) {
             throw new ApiError(401, "Unauthorized access")
@@ -169,7 +171,7 @@ const refreshAccessToken = async (req, res, next) => {
             throw new ApiError(401, "RefreshToken is invaild or expired")
         }
 
-        const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
 
         const options = {
             httpOnly: true,
@@ -189,7 +191,7 @@ const refreshAccessToken = async (req, res, next) => {
 const logoutUser = async (req, res, next) => {
 
     try {
-        const user = await User.findByIdAndUpdate(
+        await User.findByIdAndUpdate(
             req.user._id,
             {
                 $unset: {
@@ -231,8 +233,8 @@ const changeCurrentPassword = async (req, res, next) => {
     try {
         const { oldPassword, newPassword } = req.body
 
-        if (!oldPassword || !newPassword) {
-            throw new ApiError(401, "")
+        if (!oldPassword?.trim() || !newPassword?.trim()) {
+            throw new ApiError(400, "fields are required")
         }
 
         const user = await User.findById(req.user._id)
@@ -253,7 +255,7 @@ const changeCurrentPassword = async (req, res, next) => {
 
         return res
             .status(200)
-            .json(new ApiResponse(200, {}, "Password is change successfully"))
+            .json(new ApiResponse(200, {}, "Password is changed successfully"))
 
     } catch (error) {
         next(error)
@@ -264,13 +266,22 @@ const updateAccountDetails = async (req, res, next) => {
 
     try {
         const { username, fullName } = req.body
+
+        if (!username?.trim() && !fullName?.trim()) {
+            throw new ApiError(400, "Atleast one field is required to update details")
+        }
+        const existedUsername = await User.findOne({ username, _id: { $ne: req.user._id } })
+
+        if (existedUsername) {
+            throw new ApiError(400, "Username is already taken")
+        }
         const updateFields = {}
 
-        if (username) {
+        if (username?.trim()) {
             updateFields.username = username.toLowerCase()
         }
 
-        if (fullName) {
+        if (fullName?.trim()) {
             updateFields.fullName = fullName.trim()
         }
 
@@ -307,12 +318,10 @@ const updateUserAvatar = async (req, res, next) => {
         const avatarUrl = req.user.avatar
         const public_id = avatarUrl?.split("/").pop().split(".")[0]
 
-        await deleteFromCloudinary(public_id)
-
         const avatar = await uploadOnCloudinary(avatarLocalPath)
 
         if (!avatar) {
-            throw new ApiError(401, "something went wrong while uploding the avatar")
+            throw new ApiError(500, "something went wrong while uploding the avatar")
         }
 
         const updatedUser = await User.findByIdAndUpdate(
@@ -326,7 +335,11 @@ const updateUserAvatar = async (req, res, next) => {
         ).select("-password -refreshToken")
 
         if (!updatedUser) {
-            throw new ApiError(401, "Unauthorized access")
+            throw new ApiError(404, "user not found")
+        }
+
+        if (public_id) {
+            await deleteFromCloudinary(public_id)
         }
 
         return res
@@ -344,18 +357,17 @@ const updateUserCoverImage = async (req, res, next) => {
         const coverImageLocalPath = req.file?.path
 
         if (!coverImageLocalPath) {
-            throw new ApiError(401, "Cover image is required")
+            throw new ApiError(400, "Cover image is required")
         }
 
         const coverImageUrl = req.user.coverImage
         const public_id = coverImageUrl?.split("/").pop().split(".")[0]
 
-        await deleteFromCloudinary(public_id)
 
         const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
         if (!coverImage) {
-            throw new ApiError(401, "Something went wrong while uploading cover image")
+            throw new ApiError(500, "Something went wrong while uploading cover image")
         }
 
         const upadtedUser = await User.findByIdAndUpdate(
@@ -369,7 +381,11 @@ const updateUserCoverImage = async (req, res, next) => {
         ).select("-password -refreshToken")
 
         if (!upadtedUser) {
-            throw new ApiError(401, "Unauthorized access")
+            throw new ApiError(404, "user not found")
+        }
+
+        if (public_id) {
+            await deleteFromCloudinary(public_id)
         }
 
         return res
@@ -491,7 +507,9 @@ const getUserWatchHistory = async (req, res, next) => {
             }
 
         ])
-
+        if (!user.length) {
+            throw new ApiError(404, "Watch history not found")
+        }
         return res
             .status(200)
             .json(new ApiResponse(200, user[0].videos, "User watchHistory fetched successfully"))
