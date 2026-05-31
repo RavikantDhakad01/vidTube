@@ -1,6 +1,6 @@
 import {ApiError} from "../utils/ApiError.js"
 
-const validateImage = (req, res, next) => {
+const validateRequiredImage = (req, res, next) => {
 
      if (!req.file) {
         return next(new ApiError(400, "Image file is required"))
@@ -9,6 +9,19 @@ const validateImage = (req, res, next) => {
     if (!req.file?.mimetype.startsWith("image/")) {
         return next(new ApiError(400, "Only images are allowed"))
     }
+    next()
+}
+
+const validateOptionalImage = (req, res, next) => {
+
+    if (!req.file) {
+        return next()
+    }
+
+    if (!req.file.mimetype.startsWith("image/")) {
+        return next(new ApiError(400, "Only images are allowed"))
+    }
+
     next()
 }
 
@@ -43,8 +56,34 @@ const validateImageFiles = (req, res, next) => {
     next()
 }
 
+const validateVideoFiles = (req, res, next) => {
+
+    const videoFile = req.files?.videoFile?.[0]
+    const thumbnail = req.files?.thumbnail?.[0]
+
+    if (!videoFile) {
+        return next(new ApiError(400, "Video file is required"))
+    }
+
+    if (!thumbnail) {
+        return next(new ApiError(400, "Thumbnail file is required"))
+    }
+
+    if (!videoFile.mimetype.startsWith("video/")) {
+        return next(new ApiError(400, "Video file must be a video"))
+    }
+
+    if (!thumbnail.mimetype.startsWith("image/")) {
+        return next(new ApiError(400, "Thumbnail must be an image"))
+    }
+
+    next()
+}
+
 export {
-    validateImage,
+   validateRequiredImage,
+   validateOptionalImage,
     validateVideo,
-    validateImageFiles
+    validateImageFiles,
+    validateVideoFiles
 }
