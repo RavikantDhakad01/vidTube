@@ -9,7 +9,7 @@ const publishVideo = async (req, res, next) => {
 
         const { description, title } = req.body
 
-        if (!description || !title) {
+        if (!description?.trim() || !title?.trim()) {
             throw new ApiError(400, "Both Title and description are required")
         }
 
@@ -46,7 +46,7 @@ const publishVideo = async (req, res, next) => {
 
 
             if (!video) {
-                throw new ApiError("404", "Something went wrong while saving video")
+                throw new ApiError(500, "Something went wrong while saving video")
             }
 
             return res.status(201).json(new ApiResponse(201, video, "Video uploaded successfully"))
@@ -140,22 +140,26 @@ const deleteVideo = async (req, res, next) => {
     try {
 
         const { id } = req.params
-        const deletedVideo = await Video.findByIdAndDelete(id)
+        const video = await Video.findById(id)
 
-        if (!deletedVideo) {
+        if (!video) {
             throw new ApiError(404, "video not found")
         }
-
-        const videoUrl = deletedVideo.videoFile
-        const thumbnailUrl = deletedVideo.thumbnail
+        if (video.owner.toString() !== req.user._id.toString()) {
+            throw new ApiError(403, "Unauthorized access")
+        }
+        const videoUrl = video.videoFile
+        const thumbnailUrl = video.thumbnail
 
         const videoPublic_id = videoUrl?.split("/")?.pop()?.split(".")[0]
         const thumbnailPublic_id = thumbnailUrl?.split("/")?.pop()?.split(".")[0]
 
-        await deleteFromCloudinary(videoPublic_id)
+        await deleteFromCloudinary(videoPublic_id, "video")
         await deleteFromCloudinary(thumbnailPublic_id)
 
-        return res.status(200).json(new ApiResponse(200, deletedVideo, "Video deleted successfully"))
+        await Video.findByIdAndDelete(id)
+
+        return res.status(200).json(new ApiResponse(200, video, "Video deleted successfully"))
 
     } catch (error) {
         next(error)
@@ -172,8 +176,12 @@ const togglePublishStatus = async (req, res, next) => {
             throw new ApiError(404, "Video not found")
         }
 
+        if (video.owner.toString() !== req.user._id.toString()) {
+            throw new ApiError(403, "Unauthorized access")
+        }
+
         video.isPublished = !video.isPublished
-        await Video.save({ validateBeforeSave: false })
+        await video.save({ validateBeforeSave: false })
 
         return res.status(200).json(new ApiResponse(200, video, "Publish status changed successfully"))
 
@@ -182,12 +190,13 @@ const togglePublishStatus = async (req, res, next) => {
     }
 }
 
+
 const updateVideo = async (req, res, next) => {
 
     try {
 
         const { id } = req.params
-        const { title, description } = req.body
+        const { title, description } = req.body || {}
         const thumbnail = req.file
 
         const video = await Video.findById(id)
@@ -199,12 +208,6 @@ const updateVideo = async (req, res, next) => {
         if (thumbnail) {
             const oldThumbnailUrl = video.thumbnail
 
-            if (oldThumbnailUrl) {
-                const public_id = oldThumbnailUrl?.split("/")?.pop()?.split(".")[0]
-                await deleteFromCloudinary(public_id)
-            }
-
-
             const newThumbnailFile = await uploadOnCloudinary(thumbnail?.path)
 
             if (!newThumbnailFile?.url) {
@@ -213,17 +216,22 @@ const updateVideo = async (req, res, next) => {
 
             video.thumbnail = newThumbnailFile?.url
 
+            if (oldThumbnailUrl) {
+                const public_id = oldThumbnailUrl?.split("/")?.pop()?.split(".")[0]
+                await deleteFromCloudinary(public_id)
+            }
+
         }
 
-        if (title) {
-            video.title = title
+        if (title?.trim()) {
+            video.title = title.trim()
         }
 
-        if (description) {
-            video.description = description
+        if (description?.trim()) {
+            video.description = description.trim()
         }
 
-        if (!title && !description && !thumbnail) {
+        if (!title?.trim() && !description?.trim() && !thumbnail) {
             throw new ApiError(400, "No data provided to update")
         }
 

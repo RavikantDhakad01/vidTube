@@ -38,12 +38,21 @@ console.log("Cloudinary upload error:", error)
     }
 }
 
-const deleteFromCloudinary = async function (publicId) {
+const deleteFromCloudinary = async (
+    publicId,
+    resourceType = "image"
+) => {
     try {
         if (!publicId) {
             return null
         }
-        await cloudinary.uploader.destroy(publicId)
+
+        await cloudinary.uploader.destroy(
+            publicId,
+            {
+                resource_type: resourceType
+            }
+        )
     } catch (error) {
         return null
     }
