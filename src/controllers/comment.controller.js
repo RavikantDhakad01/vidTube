@@ -13,12 +13,16 @@ const addComment = async (req, res, next) => {
         if (!video) {
             throw new ApiError(404, "Video not found")
         }
-        if (!content || content.trim() === "") {
+
+        if (
+            typeof content !== "string" ||
+            !content.trim()
+        ) {
             throw new ApiError(400, "Content is required")
         }
 
         const comment = await Comment.create({
-            content: content,
+            content: content.trim(),
             video: videoId,
             owner: req.user?._id
         })
@@ -38,6 +42,12 @@ const getVideoComments = async (req, res, next) => {
     try {
 
         const { videoId } = req.params
+        const video = await Video.findById(videoId)
+
+        if (!video) {
+            throw new ApiError(404, "Video does not exixt")
+        }
+
         let { page = 1, limit = 10 } = req.query
 
         page = Number(page)
@@ -59,22 +69,25 @@ const getVideoComments = async (req, res, next) => {
 const updateComment = async (req, res, next) => {
     try {
         const { content } = req.body
+        const { commentId } = req.params
 
-        if (!content || content.trim() === "") {
-            throw new ApiError(400, "Content is required")
-        }
-
-        const { id } = req.params
-
-        const comment = await Comment.findById(id)
+        const comment = await Comment.findById(commentId)
 
         if (!comment) {
             throw new ApiError(404, "Comment not found")
         }
 
         if (comment.owner.toString() !== req.user?._id.toString()) {
-            throw new ApiError(403, "Unauthrized access")
+            throw new ApiError(403, "Unauthorized access")
         }
+
+        if (
+            typeof content !== "string" ||
+            !content.trim()
+        ) {
+            throw new ApiError(400, "Content is required")
+        }
+
 
         comment.content = content.trim()
         await comment.save({ validateBeforeSave: false })
@@ -89,9 +102,9 @@ const updateComment = async (req, res, next) => {
 
 const deleteComment = async (req, res, next) => {
     try {
-        const { id } = req.params
+        const { commentId } = req.params
 
-        const comment = await Comment.findById(id)
+        const comment = await Comment.findById(commentId)
 
         if (!comment) {
             throw new ApiError(404, "Comment not found")
@@ -101,7 +114,7 @@ const deleteComment = async (req, res, next) => {
             throw new ApiError(403, "Unauthrized access")
         }
 
-        const deletedComment = await Comment.findByIdAndDelete(id)
+        const deletedComment = await Comment.findByIdAndDelete(commentId)
 
         return res.status(200).json(new ApiResponse(200, deletedComment, "Comment deleted successfully"))
 
