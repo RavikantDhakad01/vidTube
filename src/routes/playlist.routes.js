@@ -14,8 +14,7 @@ import { verifyJwt } from "../middlewares/auth.middleware.js";
 const router = Router()
 
 router.route("/").post(verifyJwt, createPlaylist)
-router.route("/:userId").get(verifyJwt, getUserPlaylists)
-router.route("/:userId").get(verifyJwt, getUserPlaylists)
+router.route("/user/:userId").get(verifyJwt, getUserPlaylists)
 router.route("/:playlistId").get(verifyJwt, getPlaylistById).delete(verifyJwt,deletePlaylist).patch(verifyJwt,updatePlaylist)
 router.route("/:playlistId/:videoId").post(verifyJwt, addVideoToPlaylist).delete(verifyJwt, removeVideoFromPlaylist)
 
