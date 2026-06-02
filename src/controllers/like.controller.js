@@ -1,11 +1,21 @@
 import Like from "../models/like.models.js"
-import ApiError from "../utils/ApiError.js"
-import ApiResponse from "../utils/ApiResponse.js"
+import Video from "../models/video.models.js"
+import Comment from "../models/comment.models.js"
+import Tweet from "../models/tweet.models.js"
+
+import { ApiError } from "../utils/ApiError.js"
+import { ApiResponse } from "../utils/ApiResponse.js"
 
 const toggleVideoLike = async (req, res, next) => {
 
-     const { videoId } = req.params
-    try {       
+    const { videoId } = req.params
+    try {
+        const video = await Video.findById(videoId)
+
+        if (!video) {
+            throw new ApiError(404, "Video not found")
+        }
+
         const like = await Like.findOne({ video: videoId, likedBy: req.user._id })
 
         if (!like) {
@@ -26,8 +36,13 @@ const toggleVideoLike = async (req, res, next) => {
 
 const toggleCommentLike = async (req, res, next) => {
 
- const { commentId } = req.params
+    const { commentId } = req.params
     try {
+        const comment = await Comment.findById(commentId)
+
+        if (!comment) {
+            throw new ApiError(404, "comment not found")
+        }
         const like = await Like.findOne({ comment: commentId, likedBy: req.user._id })
 
         if (!like) {
@@ -49,6 +64,12 @@ const toggleTweetLike = async (req, res, next) => {
 
     const { tweetId } = req.params
     try {
+        const tweet = await Tweet.findById(tweetId)
+
+        if (!tweet) {
+            throw new ApiError(404, "Tweet not found")
+        }
+
         const like = await Like.findOne({ tweet: tweetId, likedBy: req.user._id })
 
         if (!like) {
