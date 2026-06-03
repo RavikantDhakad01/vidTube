@@ -1,8 +1,8 @@
-import ApiResponse from "../utils/ApiResponse.js"
-import ApiError from "../utils/ApiError.js"
+import {ApiResponse} from "../utils/ApiResponse.js"
+import {ApiError} from "../utils/ApiError.js"
 import Video from "../models/video.models.js"
 import Subscription from "../models/subscription.models.js"
-// TODO: Get the channel stats like total video views, total subscribers, total videos,
+
 const getChannelStats = async (req, res, next) => {
     try {
         const userVideos = await Video.find({
@@ -24,7 +24,7 @@ const getChannelStats = async (req, res, next) => {
     }
 }
 
-// TODO: Get all the videos uploaded by the channel
+
 const getChannelVideos = async (req, res, next) => {
 
     try {
