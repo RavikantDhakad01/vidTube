@@ -2,6 +2,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js"
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/Cloudnary.js"
 import Video from "../models/video.models.js"
+import User from "../models/user.models.js"
 
 const publishVideo = async (req, res, next) => {
 
@@ -119,6 +120,7 @@ const getVideoById = async (req, res, next) => {
     try {
 
         const { id } = req.params
+
         const video = await Video.findByIdAndUpdate(id,
             { $inc: { views: 1 } },
             { new: true }
@@ -128,6 +130,14 @@ const getVideoById = async (req, res, next) => {
             throw new ApiError(404, "video not found")
         }
 
+        await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $addToSet: {
+                    watchHistory: video._id
+                }
+            }
+        )
         return res.status(200).json(new ApiResponse(200, video, "Video fetched succeffully"))
 
     } catch (error) {

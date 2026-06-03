@@ -32,7 +32,7 @@ router.route("/register").post(upload.fields([
 
 router.route("/login").post(loginUser)
 router.route("/refresh-token").post(refreshAccessToken)
-router.route("/channel/:username").get(getUserChannelProfile)
+
 
 //secure routes
 router.route("/logout").post(verifyJwt, logoutUser)
@@ -41,6 +41,7 @@ router.route("/change-password").patch(verifyJwt, changeCurrentPassword)
 router.route("/update-profile").patch(verifyJwt, updateAccountDetails)
 router.route("/update-avatar").patch(verifyJwt, upload.single("avatar"),validateRequiredImage, updateUserAvatar)
 router.route("/update-cover").patch(verifyJwt, upload.single("coverImage"),validateRequiredImage, updateUserCoverImage)
+router.route("/channel/:username").get(verifyJwt,getUserChannelProfile)
 router.route("/history").get(verifyJwt, getUserWatchHistory)
 
 export default router

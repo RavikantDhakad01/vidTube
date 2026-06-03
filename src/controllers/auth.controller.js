@@ -47,6 +47,7 @@ const registerUser = async (req, res, next) => {
         if (existedUser) {
             throw new ApiError(409, "User with email or username already exists")
         }
+
         const avatarLocalPath = req.files?.avatar[0]?.path
 
         if (!avatarLocalPath) {
@@ -54,7 +55,6 @@ const registerUser = async (req, res, next) => {
         }
 
         let coverImageLocalPath
-
         if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
             coverImageLocalPath = req.files?.coverImage[0]?.path
         }
@@ -428,7 +428,7 @@ const getUserChannelProfile = async (req, res, next) => {
                     isSubscribed: {
                         $cond: {
                             if: {
-                                $in: [req.user?._id, "$subscribers.subscriber"]
+                                $in: [req.user._id, "$subscribers.subscriber"]
                             },
                             then: true,
                             else: false
@@ -498,7 +498,7 @@ const getUserWatchHistory = async (req, res, next) => {
                         {
                             $addFields: {
                                 owner: {
-                                    $first: "owner"
+                                    $first: "$owner"
                                 }
                             }
                         }
