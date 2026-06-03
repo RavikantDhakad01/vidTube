@@ -1,4 +1,3 @@
-````md
 # VidTube Backend
 
 A scalable backend API for a video-sharing platform inspired by YouTube, built using Node.js, Express.js, MongoDB, and Mongoose.
@@ -35,25 +34,25 @@ A scalable backend API for a video-sharing platform inspired by YouTube, built u
 
 ## Installation
 
-### Clone the repository
+### Clone the Repository
 
 ```bash
 git clone <repository-url>
-````
+```
 
-### Navigate to project directory
+### Navigate to Project Directory
 
 ```bash
 cd vidtube-backend
 ```
 
-### Install dependencies
+### Install Dependencies
 
 ```bash
 npm install
 ```
 
-### Create .env file
+### Create .env File
 
 ```env
 PORT=
@@ -71,7 +70,7 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 ```
 
-### Run development server
+### Run Development Server
 
 ```bash
 npm run dev
@@ -83,65 +82,65 @@ npm run dev
 
 ### Authentication
 
-* Register User
-* Login User
-* Logout User
-* Refresh Access Token
-* Change Password
-* Update Account Details
-* Get Current User
-* Get Channel Profile
-* Get Watch History
+- Register User
+- Login User
+- Logout User
+- Refresh Access Token
+- Change Password
+- Update Account Details
+- Get Current User
+- Get Channel Profile
+- Get Watch History
 
 ### Videos
 
-* Publish Video
-* Get Video By ID
-* Update Video
-* Delete Video
-* Toggle Publish Status
-* Get All Videos
+- Publish Video
+- Get Video By ID
+- Update Video
+- Delete Video
+- Toggle Publish Status
+- Get All Videos
 
 ### Playlists
 
-* Create Playlist
-* Get Playlist
-* Update Playlist
-* Delete Playlist
-* Add Video To Playlist
-* Remove Video From Playlist
+- Create Playlist
+- Get Playlist
+- Update Playlist
+- Delete Playlist
+- Add Video To Playlist
+- Remove Video From Playlist
 
 ### Comments
 
-* Add Comment
-* Get Video Comments
-* Update Comment
-* Delete Comment
+- Add Comment
+- Get Video Comments
+- Update Comment
+- Delete Comment
 
 ### Likes
 
-* Toggle Video Like
-* Toggle Comment Like
-* Toggle Tweet Like
-* Get Liked Videos
+- Toggle Video Like
+- Toggle Comment Like
+- Toggle Tweet Like
+- Get Liked Videos
 
 ### Tweets
 
-* Create Tweet
-* Get User Tweets
-* Update Tweet
-* Delete Tweet
+- Create Tweet
+- Get User Tweets
+- Update Tweet
+- Delete Tweet
 
 ### Subscriptions
 
-* Toggle Subscription
-* Get Channel Subscribers
-* Get Subscribed Channels
+- Toggle Subscription
+- Get Channel Subscribers
+- Get Subscribed Channels
 
 ### Dashboard
 
-* Get Channel Statistics
-* Get Channel Videos
+- Get Channel Statistics
+- Get Channel Videos
 
 ---
 
@@ -164,4 +163,4 @@ src/
 
 ## Author
 
-Ravikant Dhakar
+**Ravikant Dhakar**
