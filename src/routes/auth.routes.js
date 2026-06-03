@@ -33,8 +33,6 @@ router.route("/register").post(upload.fields([
 router.route("/login").post(loginUser)
 router.route("/refresh-token").post(refreshAccessToken)
 
-
-//secure routes
 router.route("/logout").post(verifyJwt, logoutUser)
 router.route("/current-user").get(verifyJwt, getCurrentUser)
 router.route("/change-password").patch(verifyJwt, changeCurrentPassword)

@@ -7,7 +7,6 @@ import User from "../models/user.models.js"
 const publishVideo = async (req, res, next) => {
 
     try {
-
         const { description, title } = req.body
 
         if (!description?.trim() || !title?.trim()) {
@@ -43,8 +42,6 @@ const publishVideo = async (req, res, next) => {
                 duration: videoFile?.duration || 0,
                 owner: req.user?._id
             })
-
-
 
             if (!video) {
                 throw new ApiError(500, "Something went wrong while saving video")

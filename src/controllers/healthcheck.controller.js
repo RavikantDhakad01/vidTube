@@ -1,4 +1,5 @@
 import { ApiResponse } from "../utils/ApiResponse.js"
+
 const HealthCheck = async (req, res, next) => {
     try {
         res.status(200).json(new ApiResponse(200, {}, "server is running..."))
